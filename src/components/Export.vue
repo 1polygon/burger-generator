@@ -3,6 +3,7 @@
         <div class="row">
             <v-btn color="success" @click="copySvg">Copy SVG</v-btn>
             <v-btn color="success" @click="downloadSvg">Download SVG</v-btn>
+            <v-btn color="success" @click="downloadPNG">Download PNG</v-btn>
         </div>
         <pre class="code"><code>{{ editor.svgCode }}</code></pre>
     </div>
@@ -47,19 +48,53 @@ export default {
         copySvg() {
             navigator.clipboard.writeText(editor.svgCode);
         },
-        downloadSvg() {
+        download(href, filename) {
             const a = document.createElement("a");
             a.style.display = "none";
-            a.href = window.URL.createObjectURL(
-                new Blob([editor.svgCode], { type: "text/svg;charset=utf-8;" })
-            );
-            a.setAttribute("download", "burger.svg");
+            a.href = href;
+            a.setAttribute("download", filename);
             document.body.appendChild(a);
 
             a.click();
 
-            window.URL.revokeObjectURL(a.href);
+            URL.revokeObjectURL(a.href);
             document.body.removeChild(a);
+        },
+        downloadSvg() {
+            this.download(
+                URL.createObjectURL(
+                    new Blob([editor.svgCode], {
+                        type: "image/svg+xml;charset=utf-8;",
+                    })
+                ),
+                "burger.svg"
+            );
+        },
+        downloadPNG() {
+            if (!this.canvas) {
+                this.canvas = document.createElement("canvas");
+                this.ctx = this.canvas.getContext("2d");
+            }
+
+            this.canvas.width = editor.width;
+            this.canvas.height = editor.gap * 2 + editor.strokeWidth;
+
+            const img = new Image();
+            img.src = URL.createObjectURL(
+                new Blob([editor.svgCode], {
+                    type: "image/svg+xml;charset=utf-8;",
+                })
+            );
+
+            img.addEventListener("load", () => {
+                this.ctx.drawImage(img, 0, 0);
+                URL.revokeObjectURL(img.src);
+
+                const imgUrl = this.canvas
+                    .toDataURL("image/png")
+                    .replace("image/png", "image/octet-stream");
+                this.download(imgUrl, "burger.png");
+            });
         },
     },
 };
