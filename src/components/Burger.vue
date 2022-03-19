@@ -42,7 +42,7 @@
         </svg>
     </div>
 </template>
-<style scoped>
+<style>
 .burger {
     border: 2px solid #212121;
     display: flex;
